@@ -1,0 +1,40 @@
+﻿http://stackoverflow.com/questions/7346929/why-do-we-use-builtin-expect-when-a-straightforward-way-is-to-use-if-else
+
+http://stackoverflow.com/questions/15468042/how-far-does-gccs-builtin-expect-go
+
+
+Remember
+
+if( __builtin_expect( !!a, 0 ) ) {
+    // not likely
+} else {
+    // quite likely
+}
+
+
+example
+
+if (__builtin_expect(x, 0)) {
+    foo();
+    ...
+} else {
+    bar();
+    ...
+}
+
+
+In Assembly
+
+  cmp   $x, 0
+  jne   _foo
+_bar:
+  call  bar
+  ...
+  jmp   after_if
+_foo:
+  call  foo
+  ...
+after_if:
+
+
+You can see that the instructions are arranged in such an order that the bar case precedes the foo case (as opposed to the C code). This can utilise the CPU pipeline better, since a jump thrashes the already fetched instructions.

@@ -1,0 +1,73 @@
+<p style="text-align: justify;">
+As a continuum to the previous blog post on improving the performance of the Knapsack algorithm by tweaking, I further proceed to improve the speed of execution by invoking certain techniques that are associated with parallelization. I would proceed to implement some mechanisms on parallelizing the Knapsack program which proceeds to compute the entire Memory Function (instead of the others), since
+</p>
+<ul>
+  <li>it seems to be more cache-friendly</li>
+  <li>does not stress the stack as much as the previous code</li>
+  <li>significant number of places of parallelizable regions in this code</li>
+</ul>
+There exists only one region in Knapsack that is worth parallelizing. Consider the function used to calculate the Memory function for the Knapsack Algorithm as follows:
+<pre style="background:#ddd2c1;">
+void knapsack(int i, int j)
+{
+  int value;
+  if(F[i][j] < 0)
+  {
+    if(j < weights[i]) //If weight of item is more than current capacity
+    value = MFKnapsack(i-1, j); //Value of previous item
+    else
+    {
+      value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+    }
+    F[i][j] = value;
+  }
+}
+</pre>
+ 
+<p style="text-align: justify;">Making use of the directives provided by the OpenMP API, the only optimization worth thinking of is to compute the both recursive functions <code>MFKnapsack(i-1, j)</code> and <code>MFKnapsack(i-1, j - weights[i]))</code> in separate threads by making use of the "sections" pragma directive, which is useful especially for identifying two tasks that can be run simultaneously. We then proceed to modify this given function accordingly:</p>
+
+<pre style="background:#ddd2c1;">
+void knapsack(int i, int j)
+{
+  int value;
+
+  if(F[i][j] < 0)
+  {
+    if(j < weights[i]) //If weight of item is more than current capacity
+
+    value = MFKnapsack(i-1, j); //Value of previous item
+
+    else
+    {
+
+        #pragma omp parallel sections
+        {
+
+           int a,b;
+           #pragma omp section
+           {
+             a = MFKnapsack(i-1, j);
+           }
+
+           #pragma omp section
+           {
+             b = MFKnapsack(i-1, j - weights[i]);
+           }
+     }
+     value = max(a, (values[i] + b));
+    }
+    F[i][j] = value;
+  }
+}
+</pre>
+<p style="text-align: justify;">
+For a given 1-D array "arr", the locations <code>arr[0]</code>, <code>arr[1]</code>, <code>arr[2]</code> etc. all share the same cache block simply because these locations are spatially local. Notice the recursive statements <code>a = MFKnapsack(i-1, j)</code> & <code>b = MFKnapsack(i-1, j - weights[i])</code> . What you must realize by these lines is that the location <code>F[i-1][j]</code> is being read by a thread and another thread runs in parallel which reads the contents of <code>F[i - 1][j - weights[i]]</code>. Since <code>F[i-1]</code> refers to a 1-D array, When the first thread changes <code>F[i-1][j]</code>, the entire cache block represented by the array is invalidated (set to dirty) for all processors. This is an undesirable effect of cache coherency and is known as False Sharing.
+
+The major solution to False Sharing is to ensure that the variables which represent False Sharing are spaced far apart in memory so that they cannot reside on the same cache block. Several compiler directives, macros and function prototypes are available for this purpose, and possibly only a few of them work depending on several factors such as the compiler architecture, the processor architecture, the Operating System, and various other specifications.
+In my case, I've made use of the attribute specifier for alignment ( __attribute__(align(n)) ) and set up a 64 byte boundary separation between every integer value . The only way to do this is by maintaining an array of structures, each containing a single int, with the aligned attribute. In this manner it is relatively easy for me to index the elements of the array (by giving only consecutive increments for indexing, as opposed to adding the remaining bytes to the index of the <code>k</code><sup>th</sup> element to obtain the <code>k+1</code><sup>th</sup> element). To take care of alignment for dynamically allocation, the function memalign is used, which takes in the number of bytes that needs to be allocated as well as the number of bytes for alignment as well.
+
+These changes to the existing code so as to make an attempt to parallelize the previous implementation of the Knapsack Algorithm gives a significant improvement with respect to the speed of execution only in certain situations, and there's not much of a difference if a very large input (say a million items) or a very small input (say, 5 items) is given. The difference can be noted only with a restricted number of inputs within a given range, say between 1000 and 10000, and it generally translates to a decrease in the number of cycles three-fold. In my case for n=7000 the number of clock cyles taken by the serial code was around 10 million, whereas for the parallel code, it was around 3 million and below.
+</p>
+<p style="text-align: justify;">
+You can view the Parallel Implementation of the Knapsack Algorithm here.
+</p>

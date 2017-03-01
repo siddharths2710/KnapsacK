@@ -1,0 +1,8 @@
+Input for Bank Robbery:
+check input_bank.txt
+1.5 million products max 500g weight and value from a scale of 1-10
+Input for backpack vacation:
+5 
+1 2 4 3 5 
+10 5 41 30 52 
+8 

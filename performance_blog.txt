@@ -1,0 +1,324 @@
+<p style="text-align:justify;">The Knapsack problem is a combinatorial optimization problem which is focused mainly on maximizing the quality (or value) based on certain constraints. To state the objective in simple terms:</p>
+<p style="text-align:justify;">Given a set of items, say <strong>n </strong>items with properties :-</p>
+
+<pre style="background:#ddd2c1;">Weights:  w<sub>1</sub>, w<sub>2</sub>, w<sub>3</sub>, ... , w<sub>n</sub>
+
+Values:  v<sub>1</sub>, v<sub>2</sub>, v<sub>3</sub>, ... , v<sub>n</sub>
+</pre>
+<p style="text-align:justify;">The aim is to find the most valuable subset of the items that fit into the knapsack.
+A very common example to describe the problem would be to travel alone to a far-off place for a few days and have a single backpack to carry all our necessities. We would like to pack several items we feel is required for the journey but the backpack doesn't have enough space to accommodate all our items. In this case we choose to pack only those items which not only fit in the bag but also satisfies most of our requirements.</p>
+<p style="text-align:justify;">The Knapsack algorithm is widely used in several Download managers (such as wget, IDM etc.) . In a typical client-server architecture,  the data to be serviced by the server to the client is broken into chunks. The server makes use of the Knapsack algorithm to group the chunks before sending them together so as to utilize the full transmission limit of sending data to the client.</p>
+<p style="text-align:justify;">The Knapsack algorithm is comes under <code>Dynamic Programming</code> since it involves solving a complex problem by breaking it down into a collection of simpler subproblems, solving them and storing each of their solutions so as to obtain a single solution which addresses the main problem. The <code>Memory Function</code> that is dynamically created for this purpose is defined as follows:</p>
+<p style="text-align:justify;"><img class="alignnone size-full wp-image-426" src="https://siddharths2710.files.wordpress.com/2017/01/mfknap.png" alt="mfknap" width="889" height="218" /></p>
+<p style="text-align:justify;">Consider a sample problem statement of adding a portion of totally 5 available items into a knapsack with the following properties:</p>
+
+<table>
+<tbody>
+<tr>
+<th>Item</th>
+<th>Weight</th>
+<th>Value</th>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>10</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4</td>
+<td>41</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+<td>30</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5</td>
+<td>52</td>
+</tr>
+</tbody>
+</table>
+<p style="text-align:justify;">Assuming the capacity of the Knapsack <code>W</code> (The maximum allowable weight) is 8,  the <code>Memory function</code>(MF) that we obtain for this example is shown below:</p>
+
+<pre style="width:56%;">             Capacity ------>
+         0  1  2  3  4  5  6  7  8
+    --- --------------------------  
+     0 | 0  0  0  0  0  0  0  0  0
+Item 1 | 0 10 10 10 10 10 10 10 10 
+ |   2 | 0 10 10 15 15 15 15 15 15 
+ |   3 | 0 10 10 15 41 51 51 56 56 
+ V   4 | 0 10 10 30 41 51 51 71 81 
+     5 | 0 10 10 30 41 52 62 71 82
+ 
+</pre>
+<p style="text-align:justify;">The first row and first column are zeroed, since <em>its not possible for an empty set of items to possess weight, </em>and <em>it's also not possible for an item to have no weight </em>respectively. The last value <code>82</code> denotes the final maximum value of the items that can be stored in the bag. By understanding the logic behind the creation of the Memory Function, we can also determine which items must be packed so as to maximize the total value. For instance, in the above case we can find out if item 5 is part of the backpack. We subtract the final capacity <code>8</code> to the weight of item 5 (which comes to <code>8 - 5 = 3</code> ) and compare the values <code>MF[5][8]</code> and <code>MF[4][8]</code> , which are not equal. From this we can blindly infer that item 5 is part of the backpack. In a similar way we find out that even item 4 is also included.   However we also notice that items 1,2 and 3 aren't part of the backpack.</p>
+<p style="text-align:justify;">Now onto the algorithm part. We can summarize the Memory Function generation with the below algorithm:</p>
+
+<pre style="background:#ddd2c1;">Algo MFKnapsack(i, j) // i, j represent item no. & capacity
+   <strong>if</strong> MF[i][j] < 0 // Still Not calculated
+        <strong>if</strong> j < Weights[i] <strong>then</strong>
+            value ← MFKnapsack(i-1, j)
+        <strong>else</strong>
+           value ← max(MFKnapsack(i-1, j), Values[i] + MFKnapsack(i-1, j-Weights[i])
+        MF[i][j] ← value // put valid value in the table for both cases
+   <strong>return</strong> MF[i][j]
+</pre>
+I've made a code in C which corresponds to the above algorithm. To go through my entire code click <a href="https://gist.github.com/siddharths2710/2b0dd1e9be6651e6160eca7094d7277c">here</a>. The input file corresponding to my test case can be obtained by clicking this link: <a href="https://gist.github.com/siddharths2710/fc74d9f4a8d5d359339d1d6acec4406d">input.txt</a>
+
+One main point that is worth knowing is that the entire Memory Function is not being pre-computed in my code. If you attempt to print the final Memory Function <code>F</code> it would look something like this:
+<pre style="width:56%;"> 
+               Capacity ------>
+         0  1  2  3  4  5  6  7  8
+    --- --------------------------  
+     0 | 0  0  0  0  0  0  0  0  0
+Item 1 | 0 10 10 10 10 10 10 -1 10 
+ |   2 | 0 10 -1 15 15 15 -1 -1 15 
+ |   3 | 0 -1 -1 15 -1 51 -1 -1 56 
+ V   4 | 0 -1 -1 30 -1 -1 -1 -1 81 
+     5 | 0 -1 -1 -1 -1 -1 -1 -1 82
+ 
+</pre>
+If you went through the algorithm or code carefully,  you would notice that there is no requirement for calculating all values since the optimal value <code>MF[i][j]</code> for a certain capacity <code>j</code> of the knapsack provided with a certain number of items from <code>1</code> to <code>i </code>need not always depend on the optimal values of <code>MF[i-1][j]</code>,<code>MF[i][j-1]</code>, <code>MF[i-1][j-1]</code> or any other adjacent value for that matter. Due to this reason the recursive algorithm would calculate only certain values of the memory function that are essential in obtaining the final optimal value of items that can be packed in the knapsack.
+
+Suppose I would instead rewrite my code to calculate the entire Memory Function before obtaining the final value that is needed, the algorithm is in the order of O(n<sup>2</sup>) in both the best case as well as the worst case, in contrast to the greedy heuristics represented by the previous algorithm. Click <a href="https://gist.github.com/siddharths2710/7abbac6531521a0a65ffb0c50579a301" target="_blank">here</a> to go through the rewritten code.
+<p style="text-align:justify;">There exists a possibility that you may have not clicked the link to the code which calculates the entire Memory Function. This may be because you were under the assumption that this code would do more harm than good in comparison to the previous one and hence lead to larger time and space complexities as well. While the code does require more space than the previous algorithm, we found it to run much<strong> faster </strong>than the previous one on  modern systems.</p>
+<p style="text-align:justify;">To differentiate between times of execution of both variations of the same code, I've made use of a large input file on which both the minute variations of the Knapsack algorithm are tested on. You can obtain the input file from this link: <a href="https://gist.github.com/siddharths2710/fc74d9f4a8d5d359339d1d6acec4406d">input_robbery</a> . The scenario I assumed for this test case is that of an ongoing robbery of a large jewellery shop which has around 50,000 items, each item weighing around <code>1-500</code> grams and valued from a scale of <code>1-100</code>.</p>
+<p style="text-align:justify;">After compiling, executing and timing the execution of both the C programs, you would find out that the first program that implements the Memory Function algorithm and computes fewer values is actually much slower than the second program which computes the whole Memory Function in its entirety before simply retrieving the final value from it. In my case the 1st program took about <code>13.6</code> seconds while the second one took only <code>3.7</code> seconds.</p>
+<p style="text-align:justify;">So you'd obviously be wondering as to how come the program that computes all the elements of the Memory Function ends up being 4 times faster than the previous algorithm which only recursively computes some values. I would summarize the differences between the first and second programs as typically:</p>
+<p style="text-align:justify;"><strong>Program 1:</strong></p>
+
+<pre style="width:84%;">result = invoke_knapsack_algo(n,W)
+</pre>
+vs
+
+<strong>Program 2:</strong>
+<pre style="width:60%;">for(i from 1..n)
+{
+	for(j from 1..W)
+	{
+           Calculate Memory_Fn[i,j]
+	}
+}
+result = Memory_Fn[n,W]</pre>
+where n is the number of items and W is the weight of the Knapsack The code snippet we would be looking at for <code>Calculating the Memory Function</code> as well as <code>invoke knapsack algo(n,W)</code> would be:
+<pre style="background:#ddd2c1;">int knapsack(int i, int j)
+{
+	int value;
+	if(F[i][j] < 0) //Not calculated yet
+	{
+		if(j < weights[i])  //If weight of item is more than current capacity
+			value = knapsack(i-1, j); //Value of previous item
+		else
+			value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+		F[i][j] = value;
+	}
+	return F[i][j];
+}
+</pre>
+Now on to the main reasoning. One reason could be attributed to various cache optimization techniques, since the 2nd program provides a more predictable trend in terms of acquiring the Memory Function values, even though this is an O(n<sup>2</sup>) algorithm. Another reason could be due to the the dependency of a given stack frame on previous stack frames. You see, the <code>invoke_knapsack_algo</code> function of Program 1 would result in a repetitive recursive propagation which results in creation of a large numbers of <strong>chains</strong> of stack frames in view of the recursive part of the code. I would now proceed to describe how the memory function is formed for the case provided by <a href="https://gist.github.com/siddharths2710/fc74d9f4a8d5d359339d1d6acec4406d" target="_blank">input.txt</a>, which represents choosing between 5 items of different values and a knapsack of capacity 8 such that:
+<table>
+<tbody>
+<tr>
+<th>Item</th>
+<th>Weight</th>
+<th>Value</th>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>10</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4</td>
+<td>41</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+<td>30</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5</td>
+<td>52</td>
+</tr>
+</tbody>
+</table>
+We start by initializing all elements of the Memory Function to some invalid integer (say <code>-1</code>).
+<pre style="width:56%;">                  Capacity ------>
+         0  1  2  3  4  5  6  7  8
+    --- --------------------------  
+     0 | 0  0  0  0  0  0  0  0  0
+Item 1 | 0 -1 -1 -1 -1 -1 -1 -1 -1 
+ |   2 | 0 -1 -1 -1 -1 -1 -1 -1 -1 
+ |   3 | 0 -1 -1 -1 -1 -1 -1 -1 -1 
+ V   4 | 0 -1 -1 -1 -1 -1 -1 -1 -1 
+     5 | 0 -1 -1 -1 -1 -1 -1 -1 -1
+</pre>
+Once we perform the operation <code>result = invoke_knapsack_algo(n,W)</code> of Program 1, we actually end up calling <code>knapsack(n,W)</code> in the C program. If you have GNU Debugger preinstalled on your Unix system, you can get an idea as to how the program will propogate. (I've set breakpoints at lines 71 and 73 of the first program, where the recursive knapsack calls were made):
+<pre style="background:#ddd2c1;">Breakpoint 2, knapsack (i=5, j=8) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=4, j=3) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 1, knapsack (i=3, j=3) at knaps_good.c:71
+71				value = knapsack(i-1, j);Value of previous item
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=3) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=1) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=3) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=5, j=8) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=4, j=8) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=3, j=5) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 1, knapsack (i=2, j=1) at knaps_good.c:71
+71				value = knapsack(i-1, j);Value of previous item
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=5) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=5) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=3, j=8) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+ 
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=4) at knaps_good.c:73
+73				value = max(knapsack(i-1, j), (values[i] + knapsack(i-1, j - weights[i])));
+</pre>
+Looking at the above output we can estimate the propogation as:
+<pre style="background:#ddd2c1;">MF[5,8] --> MF[4,3] --> MF[3,3] --> MF[2,3] --> MF[1,1]
+MF[2,3] --> MF[1,3] //knapsack(i-1,j)
+MF[5,8] --> MF[4,8] --> MF[3,5] --> MF[2,1]
+MF[3,5] --> MF[2,5] --> MF[1,5] //knapsack(i-1,j)
+.
+.
+.
+</pre>
+and so on.
+What these sequences of propagation represent is the vast number of stack frames created which are associated with other stack frames as well.
+
+For the second program, this is how the propagation is shown by the GNU debgger:
+<pre style="background:#ddd2c1;">Breakpoint 2, knapsack (i=1, j=1) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=2) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=3) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=4) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=5) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=6) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=7) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=1, j=8) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 1, knapsack (i=2, j=1) at knaps_bad.c:99
+99				value = MFKnapsack(i-1, j); //Value of previous item
+
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=2) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=3) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=4) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=5) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+
+Continuing.
+
+Breakpoint 2, knapsack (i=2, j=6) at knaps_bad.c:101
+101				value = max(MFKnapsack(i-1, j), (values[i] + MFKnapsack(i-1, j - weights[i])));
+</pre>
+<p style="text-align:justify;">In this case the values of <code>i</code> and <code>j</code> are known to be in a contiguous manner. What this means for performance is that only a maximum of 2 stack frames will be called at a time since computing the value at <code>MF[i][j]</code> needs values at locations <code>MF[i-1][j]</code> and <code>MF[i-1][j-weights[i]]</code>, both of which  have already been computed before and readily available for use. This small difference results in the difference in the noticable performance improvement of large values.</p>
+<p style="text-align:justify;">One small optimization that can be done on the first program would be to compute the Memory Function in the order of transposing the Memory Function, so that we would be taking into account the row major order of contiguous linear storage ( in accordance with the implementation of the C Language). For me this took about <code>8</code> seconds for completion of execution in this manner for the input file <a href="https://gist.github.com/siddharths2710/fc74d9f4a8d5d359339d1d6acec4406d">input_robbery</a>. The transpose version of the previous code can be found <a href="https://gist.github.com/siddharths2710/11db9b1d2d9db267f04379f8c6ca98a9" target="_blank">here</a>.</p>
+<p style="text-align:justify;">Its possible that the 1st Program would be faster than the 2nd one for very large values of items, especially if the execution is devoid of all kinds of cache optimization techniques, since in theory, the Knapsack Algorithm would require less time to compute in comparison with the O(n<sup>2</sup>) Algorithm of the 2nd Program. Even with cache optimizations, its possible that the scenario would change for huge values of items as input, say a million items or so.</p>

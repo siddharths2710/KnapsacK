@@ -1,0 +1,12 @@
+siddharths2710@siddharths2710-Compaq:~/Desktop/KnapsacK$ time ./a.out < input_bank.txt
+Optimal value= 15925
+
+real	0m0.620s
+user	0m0.764s
+sys	0m0.080s
+siddharths2710@siddharths2710-Compaq:~/Desktop/KnapsacK$ time ./a.out < input_jeweller.txt
+Optimal value= 35189
+
+real	0m3.083s
+user	0m3.848s
+sys	0m0.296s
